@@ -28,6 +28,9 @@ if ws then
     local message = ws.receive()
 
     if message then
+      -- Print the received command
+      print("Received command:", message)
+
       -- Process the received command
       local success, result = pcall(loadstring(message))
 
