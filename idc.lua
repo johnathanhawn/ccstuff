@@ -66,9 +66,3 @@ if ws then
 else
   print("Failed to connect to the WebSocket server: " .. err)
 end
-In this updated code:
-
-The code checks if the received command is a movement command (turtle.forward(), turtle.back(), turtle.left(), turtle.right(), turtle.up(), turtle.down()).
-If it's a movement command, the turtle uses turtle.inspect() to inspect its surroundings.
-The inspection result is sent back to the client using ws.send().
-Please note that turtle.inspect() returns a table containing information about the block in front of the turtle, including the name property. Modify the response message as needed to suit your requirements.
