@@ -34,6 +34,22 @@ if ws then
       -- Process the received command
       local success, result = pcall(loadstring(message))
 
+      -- Check if the command is a movement command
+      local isMovementCommand = false
+      if message == "turtle.forward()" or message == "turtle.back()" or message == "turtle.left()" or message == "turtle.right()" or message == "turtle.up()" or message == "turtle.down()" then
+        isMovementCommand = true
+      end
+
+      -- If it's a movement command, inspect surroundings
+      if isMovementCommand then
+        local inspectResult = turtle.inspect()
+        if inspectResult then
+          ws.send("Inspect result: " .. inspectResult.name)
+        else
+          ws.send("Unable to inspect surroundings")
+        end
+      end
+
       -- Check if the command execution was successful
       if success then
         -- Return the result of the command
@@ -50,3 +66,9 @@ if ws then
 else
   print("Failed to connect to the WebSocket server: " .. err)
 end
+In this updated code:
+
+The code checks if the received command is a movement command (turtle.forward(), turtle.back(), turtle.left(), turtle.right(), turtle.up(), turtle.down()).
+If it's a movement command, the turtle uses turtle.inspect() to inspect its surroundings.
+The inspection result is sent back to the client using ws.send().
+Please note that turtle.inspect() returns a table containing information about the block in front of the turtle, including the name property. Modify the response message as needed to suit your requirements.
