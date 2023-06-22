@@ -1,10 +1,28 @@
-local ws, err = http.websocket("wss://your-websocket-server-url")
+local csFilePath = "cs.txt"
+
+-- Check if the cs.txt file exists
+if not fs.exists(csFilePath) then
+  -- File doesn't exist, create it
+  local csFile = fs.open(csFilePath, "w")
+  csFile.writeLine("wss://your-websocket-server-url") -- Replace with your desired default server URL
+  csFile.close()
+  print("cs.txt file created. Please update the WebSocket server URL in cs.txt.")
+  return
+end
+
+-- Read the server URL from the cs.txt file
+local csFile = fs.open(csFilePath, "r")
+local serverURL = csFile.readAll()
+csFile.close()
+
+-- Connect to the WebSocket server
+local ws, err = http.websocket(serverURL)
 
 if ws then
   print("WebSocket server connected")
 
   -- Send a welcome message to the client
-  ws.send("Hello, server!")
+  ws.send("Hello, client!")
 
   while true do
     local message = ws.receive()
