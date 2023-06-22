@@ -3,6 +3,9 @@ local ws, err = http.websocket("wss://your-websocket-server-url")
 if ws then
   print("WebSocket server connected")
 
+  -- Send a welcome message to the client
+  ws.send("Turtle Here")
+
   while true do
     local message = ws.receive()
 
@@ -22,19 +25,9 @@ else
 end
 
 function processCommand(command)
-  -- Add your own logic here to process the command
-  -- and generate the appropriate response
+  -- Run the command on the turtle shell
+  shell.run(command)
 
-  -- Example: If the command is "ping", respond with "Pong!"
-  if command == "ping" then
-    return "Pong!"
-  end
-
-  -- Example: If the command is "time", respond with the current time
-  if command == "time" then
-    return os.time()
-  end
-
-  -- Default response for unknown commands
-  return "Unknown command"
+  -- Return an acknowledgment message
+  return "Command executed: " .. command
 end
