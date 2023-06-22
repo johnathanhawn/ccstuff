@@ -37,11 +37,12 @@ local function connectToWebSocket()
 
         -- Handle turtle.inspect() response
         if message == "turtle.inspect()" then
-          local inspectResult
+          local inspectResult = {}
+          inspectResult.success = success
           if success then
-            inspectResult = result ~= nil and { name = result.name, state = result.state } or "nil"
+            inspectResult.tag = result ~= nil and { name = result.name, state = result.state } or "nil"
           else
-            inspectResult = "Command execution error: " .. tostring(result)
+            inspectResult.tag = "Command execution error: " .. tostring(result)
           end
           
           -- Serialize the inspectResult to send as a string
@@ -55,12 +56,18 @@ local function connectToWebSocket()
           -- Return the serialized result as a string
           ws.send(serializedResult)
         else
-          -- Serialize the result to send as a string
+          -- Create the response object
+          local response = {
+            success = success,
+            result = result
+          }
+          
+          -- Serialize the response to send as a string
           local serializedResult
           if textutilsAvailable then
-            serializedResult = result ~= nil and textutils.serialize(result) or "nil"
+            serializedResult = textutils.serialize(response)
           else
-            serializedResult = result ~= nil and tostring(result) or "nil"
+            serializedResult = tostring(response)
           end
 
           -- Return the serialized result as a string
