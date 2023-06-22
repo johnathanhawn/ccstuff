@@ -35,16 +35,37 @@ local function connectToWebSocket()
         -- Process the received command
         local success, result = pcall(loadstring(message))
 
-        -- Serialize the result to send as a string
-        local serializedResult
-        if textutilsAvailable then
-          serializedResult = result ~= nil and textutils.serialize(result) or "nil"
-        else
-          serializedResult = result ~= nil and tostring(result) or "nil"
-        end
+        -- Handle turtle.inspect() response
+        if message == "turtle.inspect()" then
+          local inspectResult
+          if success then
+            inspectResult = result ~= nil and { name = result.name, state = result.state } or "nil"
+          else
+            inspectResult = "Command execution error: " .. tostring(result)
+          end
+          
+          -- Serialize the inspectResult to send as a string
+          local serializedResult
+          if textutilsAvailable then
+            serializedResult = textutils.serialize(inspectResult)
+          else
+            serializedResult = tostring(inspectResult)
+          end
 
-        -- Return the serialized result as a string
-        ws.send(serializedResult)
+          -- Return the serialized result as a string
+          ws.send(serializedResult)
+        else
+          -- Serialize the result to send as a string
+          local serializedResult
+          if textutilsAvailable then
+            serializedResult = result ~= nil and textutils.serialize(result) or "nil"
+          else
+            serializedResult = result ~= nil and tostring(result) or "nil"
+          end
+
+          -- Return the serialized result as a string
+          ws.send(serializedResult)
+        end
       end
     end
 
