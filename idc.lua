@@ -1,4 +1,4 @@
-local ws, err = http.websocket("wss://your-websocket-server-url")
+local ws, err = http.websocket("ws://your-websocket-server-url")
 
 if ws then
   print("WebSocket server connected")
