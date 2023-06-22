@@ -36,7 +36,12 @@ local function connectToWebSocket()
         local success, result = pcall(loadstring(message))
 
         -- Serialize the result to send as a string
-        local serializedResult = textutilsAvailable and textutils.serialize(result) or tostring(result)
+        local serializedResult
+        if textutilsAvailable then
+          serializedResult = result ~= nil and textutils.serialize(result) or "nil"
+        else
+          serializedResult = result ~= nil and tostring(result) or "nil"
+        end
 
         -- Return the serialized result as a string
         ws.send(serializedResult)
