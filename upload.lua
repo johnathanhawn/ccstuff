@@ -1,5 +1,6 @@
 local csFilePath = "cs.txt"
 local defaultURL = "wss://example.com" -- Replace with your desired default WebSocket server URL
+local diskPath = "/disk" -- Specify the disk directory
 
 local function createCsFile(url)
   local file = fs.open(csFilePath, "w")
@@ -27,11 +28,11 @@ local function sendFilesViaWebSocket()
   if ws then
     print("WebSocket server connected")
 
-    local files = fs.list(shell.dir())
+    local files = fs.list(diskPath)
     local fileData = {}
 
     for _, filename in ipairs(files) do
-      local filePath = fs.combine(shell.dir(), filename)
+      local filePath = fs.combine(diskPath, filename)
       if not fs.isDir(filePath) then
         local file = fs.open(filePath, "r")
         local content = file.readAll()
