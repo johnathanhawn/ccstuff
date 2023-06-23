@@ -1,23 +1,26 @@
-local websocket = require("websocket")
+local ws = require("websocket")
 local fs = require("filesystem")
 
 -- Read connection string from file
 local csFile = "cs.txt"
-local cs = fs.read(csFile)
+local cs = fs.open(csFile, "r")
 if not cs then
   print("Connection string not found.")
   return
 end
+local connectionStr = cs.readAll()
+cs.close()
 
 -- Get all files in /disk/ directory
 local directory = "/disk/"
 local files = {}
-for file in fs.list(directory) do
+for _, file in ipairs(fs.list(directory)) do
   local filePath = directory .. file
   if not fs.isDirectory(filePath) then
-    local fileContent = fs.read(filePath)
+    local fileContent = fs.open(filePath, "r")
     if fileContent then
-      files[file] = fileContent
+      files[file] = fileContent.readAll()
+      fileContent.close()
     else
       print("Unable to read file:", file)
     end
@@ -25,12 +28,12 @@ for file in fs.list(directory) do
 end
 
 -- WebSocket client
-local client = websocket.client()
+local client = ws()
 
 -- Event handlers
 client:on_connected(function()
   print("Connected to server")
-  client:sendText(json.encode(files))
+  client:send(textutils.serializeJSON(files))
 end)
 
 client:on_disconnected(function()
@@ -42,7 +45,7 @@ client:on_error(function(err)
 end)
 
 -- Connect to server using the provided connection string
-client:connect(cs)
+client:connect(connectionStr)
 
 -- Wait for the connection to establish and message to be sent
 while not client:is_connected() do
@@ -63,4 +66,4 @@ else
 end
 
 -- Disconnect from the server
-client:close()
+client:disconnect()
