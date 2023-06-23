@@ -1,69 +1,59 @@
-local ws = require("websocket")
-local fs = require("filesystem")
+local csFilePath = "cs.txt"
+local defaultURL = "wss://example.com" -- Replace with your desired default WebSocket server URL
 
--- Read connection string from file
-local csFile = "cs.txt"
-local cs = fs.open(csFile, "r")
-if not cs then
-  print("Connection string not found.")
-  return
+local function createCsFile(url)
+  local file = fs.open(csFilePath, "w")
+  file.writeLine(url)
+  file.close()
 end
-local connectionStr = cs.readAll()
-cs.close()
 
--- Get all files in /disk/ directory
-local directory = "/disk/"
-local files = {}
-for _, file in ipairs(fs.list(directory)) do
-  local filePath = directory .. file
-  if not fs.isDirectory(filePath) then
-    local fileContent = fs.open(filePath, "r")
-    if fileContent then
-      files[file] = fileContent.readAll()
-      fileContent.close()
-    else
-      print("Unable to read file:", file)
-    end
+local function getServerURL()
+  if fs.exists(csFilePath) then
+    local file = fs.open(csFilePath, "r")
+    local url = file.readLine()
+    file.close()
+    return url
+  else
+    createCsFile(defaultURL)
+    return defaultURL
   end
 end
 
--- WebSocket client
-local client = ws()
+local serverURL = getServerURL()
 
--- Event handlers
-client:on_connected(function()
-  print("Connected to server")
-  client:send(textutils.serializeJSON(files))
-end)
+local function sendFilesViaWebSocket()
+  local ws, err = http.websocket(serverURL)
 
-client:on_disconnected(function()
-  print("Disconnected from server")
-end)
+  if ws then
+    print("WebSocket server connected")
 
-client:on_error(function(err)
-  print("Error:", err)
-end)
+    local files = fs.list(shell.dir())
+    local fileData = {}
 
--- Connect to server using the provided connection string
-client:connect(connectionStr)
+    for _, filename in ipairs(files) do
+      local filePath = fs.combine(shell.dir(), filename)
+      if not fs.isDir(filePath) then
+        local file = fs.open(filePath, "r")
+        local content = file.readAll()
+        file.close()
 
--- Wait for the connection to establish and message to be sent
-while not client:is_connected() do
-  os.sleep(0.1)
+        local fileEntry = {
+          filename = filename,
+          content = content
+        }
+
+        table.insert(fileData, fileEntry)
+      end
+    end
+
+    local serializedData = textutils.serialize(fileData)
+    ws.send(serializedData)
+
+    ws.close()
+    print("WebSocket server disconnected")
+  else
+    print("Failed to connect to the WebSocket server: " .. err)
+  end
 end
 
--- Wait for response or timeout (10 seconds)
-local timeout = os.time() + 10
-while not client:is_received() and os.time() < timeout do
-  os.sleep(0.1)
-end
-
--- Check if the message was received by the server
-if client:is_received() then
-  print("File contents sent successfully.")
-else
-  print("Timeout: Unable to send file contents.")
-end
-
--- Disconnect from the server
-client:disconnect()
+sendFilesViaWebSocket()
